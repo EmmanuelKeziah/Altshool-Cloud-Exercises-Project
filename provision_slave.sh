@@ -1,8 +1,29 @@
+#!/bin/bash
+
+#DEFINE VARIABLES FOR SLAVE VM
+MASTER_IP="192.168.60.11"
+SLAVE_IP="192.168.60.15"
+SSH_PASSWORD="vagrant"
+ALTSCHOOL_PASSWORD="emperor"
+ALTSCHOOL_USER="ALTSCHOOL"
+ALTSCHOOL_GROUP="ALTSCHOOL"
+ALTSCHOOL_DIR="Altschool_dir"
+APACHE_PACKAGE="apache2"
+PHP_PACKAGES=("php7.4" "php7.4-mysql" "php7.4-curl" "php7.4-gd" "php7.4-mbstring" "php7.4-xml" "php7.4-xmlrpc")
+MYSQL_PACKAGE="mysql-server"
+MYSQL_ROOT_PASSWORD="LAMP"
+WWW_DIR="/var/www"
+HTML_DIR="$WWW_DIR/html"
+PHPINFO_FILE="$HTML_DIR/phpinfo.php"
+MYSQL_ROOT_PASSWORD="password"
+
+#Define Slave configurations for vagrantfile
+cat <<EOF > Vagrantfile
 Vagrant.configure("2") do |config|
 #Set up Slave VM
 config.vm.define "slave" do |slave|
   slave.vm.box = "ubuntu/focal64"
-  slave.vm.network "private_network", ip: "192.168.60.15"
+  slave.vm.network "private_network", ip: "$SLAVE_IP"
 
   config.vm.provider "virtualbox" do |virtualbox|
         virtualbox.memory = "1024"
@@ -13,7 +34,7 @@ config.vm.define "slave" do |slave|
     slave.vm.hostname = "SLAVE"
 
     #Define the IP address for Slave VM
-    slave.vm.network "private_network", ip: "192.168.60.15"
+    slave.vm.network "private_network", ip: "$SLAVE_IP"
 
     slave.vm.network "forwarded_port", guest: 22, host: 2251, id: "ssh"
 
@@ -47,7 +68,7 @@ config.vm.define "slave" do |slave|
      sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
 
     # Copying SSH Keys
-    ssh-copy-id -i ~/.ssh/id_rsa.pub vagrant@192.168.60.11
+    ssh-copy-id -i ~/.ssh/id_rsa.pub vagrant@$MASTER_IP
 
     # Restart sshd service on the Slave VM
     if sudo systemctl restart sshd; then
@@ -97,55 +118,55 @@ config.vm.define "slave" do |slave|
     fi
 
     # Install Apache on Slave VM
-    if ! dpkg -l | grep -q apache2; then
-        echo "Installing apache2"
-        sudo apt-get install -y apache2 || exit 1
+    if ! dpkg -l | grep -q $APACHE_PACKAGE; then
+        echo "Installing $APACHE_PACKAGE"
+        sudo apt-get install -y $APACHE_PACKAGE || exit 1
     else
-        echo "apache2 is already installed"
+        echo "$APACHE_PACKAGE is already installed"
     fi
 
     # Add firewall rule only if Apache is installed
-    if dpkg -l | grep -q apache2; then
-        echo "Adding firewall rule for apache2"
+    if dpkg -l | grep -q $APACHE_PACKAGE; then
+        echo "Adding firewall rule for $APACHE_PACKAGE"
         sudo ufw allow in "Apache Full" || exit 1
     fi
 
     # Check Apache status and set to start on boot
-    if sudo systemctl status apache2 | grep -q "active (running)"; then
-        echo "apache2 is running"
+    if sudo systemctl status $APACHE_PACKAGE | grep -q "active (running)"; then
+        echo "$APACHE_PACKAGE is running"
     else
-        echo "apache2 is not running"
-        sudo systemctl start apache2 || exit 1
+        echo "$APACHE_PACKAGE is not running"
+        sudo systemctl start $APACHE_PACKAGE || exit 1
     fi
 
     # Install PHP Packages on Slave VM
-    for package in "php7.4 php7.4-mysql php7.4-curl php7.4-gd php7.4-mbstring php7.4-xml php7.4-xmlrpc"; do
-        if ! dpkg -l | grep -q ; then
-            echo "Installing "
-            sudo apt-get install -y  || exit 1
+    for package in "${PHP_PACKAGES[@]}"; do
+        if ! dpkg -l | grep -q $package; then
+            echo "Installing $package"
+            sudo apt-get install -y $package || exit 1
         else
-            echo " is already installed"
+            echo "$package is already installed"
         fi
     done
 
     # Install MySQL on Slave VM
-    if ! dpkg -l | grep -q mysql-server; then
-        echo "Installing mysql-server"
-        sudo apt-get install -y mysql-server || exit 1
+    if ! dpkg -l | grep -q $MYSQL_PACKAGE; then
+        echo "Installing $MYSQL_PACKAGE"
+        sudo apt-get install -y $MYSQL_PACKAGE || exit 1
     else
-        echo "mysql-server is already installed"
+        echo "$MYSQL_PACKAGE is already installed"
     fi
 
     # Check MySQL status and set to start on boot
-    if sudo systemctl status mysql-server | grep -q "active (running)"; then
-        echo "mysql-server is running"
+    if sudo systemctl status $MYSQL_PACKAGE | grep -q "active (running)"; then
+        echo "$MYSQL_PACKAGE is running"
     else
-        echo "mysql-server is not running"
-        sudo systemctl start mysql-server || exit 1
+        echo "$MYSQL_PACKAGE is not running"
+        sudo systemctl start $MYSQL_PACKAGE || exit 1
     fi
 
     # Set MySQL root password
-    if sudo debconf-set-selections <<< "mysql-server mysql-server/root_password password password" && sudo debconf-set-selections <<< "mysql-server mysql-server/root_password_again password password"; then
+    if sudo debconf-set-selections <<< "$MYSQL_PACKAGE $MYSQL_PACKAGE/root_password password $MYSQL_ROOT_PASSWORD" && sudo debconf-set-selections <<< "$MYSQL_PACKAGE $MYSQL_PACKAGE/root_password_again password $MYSQL_ROOT_PASSWORD"; then
         echo "MySQL root password is set"
     else
         echo "Failed to set MySQL root password"
@@ -154,9 +175,9 @@ config.vm.define "slave" do |slave|
 
     # Running my_sql_secure_installation
     if sudo mysql_secure_installation<<EOF
-    password
+    $MYSQL_ROOT_PASSWORD
     n
-    password
+    $MYSQL_ROOT_PASSWORD
     Y
     Y
     Y
@@ -170,3 +191,5 @@ config.vm.define "slave" do |slave|
    SHELL
    end
   end
+EOF
+

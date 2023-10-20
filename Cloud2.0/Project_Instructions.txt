@@ -1,0 +1,36 @@
+### PROJECT
+### TITLE: DEPLOYMENT OF VAGRANT UBUNTU CLUSTER WITH LAMPSTACK
+
+## Task and Objective: 
+-Create a bashscript to ochestrate the automated deployment of two vagrant-based Ubuntu syatems, designated as "Master" and "Slave"  respectively with an integrated LAMPSTACK on both systems.
+
+## SPECIFICATIONS:
+# Infrastructure Configurations:
+-Deploy two ubuntu systems; master node(this node should be capable of acting as a control system), and slave node(this node should be managed by the master node).
+
+## User Management:
+# On the master node:
+-Create a user named "altschool"
+-Grant the altschool user root (superuser) privileges.
+
+# Internode Communication:
+-Enable SSH key based authentication;
+The master node (altschool user) should seamlessly SSH into the slave node without requiring a password.
+
+## Data Management and Transfer:
+# On Initiation;
+-Copy the contents of the '/mnt/Altschool' directory from the master node to '/mnt/altschool/slave' on the slave node.
+This operation should be performed  using the altschool user from the master node.
+
+# Process Monitoring:
+-The master node should display an overview of the linux process management showcasing currently running processes.
+
+# LAMPSTACK Deployment:
+-Install a LAMP (linux, apache, mySQL, pHp) stack on both nodes.
+-Ensure apache is running and set to start on boot.
+-Secure the mySQL installation and initialize it with a default user and password.
+-Validate pHp functionality with apache.
+
+# Deliverables:
+-A bashscript encapsulatng the entire deployment process adhering to the specifications above.
+-Documentation accompanying the script elucidiating the steps and procedures for execution.
