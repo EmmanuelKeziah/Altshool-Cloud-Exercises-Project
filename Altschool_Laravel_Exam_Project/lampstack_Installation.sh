@@ -12,15 +12,22 @@
 echo "Installing LAMP stack"
 sudo apt-get install -y apache2 || exit 1
 
+#  INSTALLING MYSQL
 echo "Installing MySQL"
-sudo apt-get install -y mysql-server || exit 1
+if sudo apt-get install -y mysql-server; then
+    echo "MySQL installed successfully"
+else
+    echo "ERROR: Failed to install MySQL"
+    exit 1
+fi
 
 echo "Preparing to install PHP"
 sudo add-apt-repository -y ppa:ondrej/php || exit 1
 
 echo "Updating package list"
+sudo apt-get update -y || exit 1
 
-
+#  INSTALLING PHP AND ITS MODULES
 echo "Installing PHP and its modules"
 echo "..."
 if sudo apt-get install -y php; then
@@ -116,13 +123,22 @@ fi
 #===================================================================================================
 
 
+
+# GIT CLONE (LARAVEL)
+#===================================================================================================
+cd /var/www/html && git clone https://github.com/laravel/laravel.git && mkdir LARAVEL_PROJECT 
+#===================================================================================================
+
+
 #      CONFIGURING APACHE2 WEB SERVER
 #===================================================================================================
 echo "Configuring apache2 web server"
+
+# Create laravel.conf file in /etc/apache2/sites-available directory
 cat <<EOF > /etc/apache2/sites-available/laravel.conf
 <VirtualHost *:80>
     ServerName 192.168.13.14
-    ServerAdmin keziahema@gmail.com
+    ServerAlias keziahema@gmail.com
     DocumentRoot /var/www/html/laravel/public
 
     <Directory /var/www/html/laravel>
@@ -136,6 +152,7 @@ cat <<EOF > /etc/apache2/sites-available/laravel.conf
 EOF
 #===================================================================================================
 
+ 
 #     CLONING PHP Laravel GitHub Repository:
 #===================================================================================================
 cd /var/www/html && git clone https://github.com/laravel/laravel.git
@@ -168,4 +185,43 @@ echo "LAMP stack installed successfully"
 
 #   CONFIGURING MYSQL
 #===================================================================================================
-echo "Configuring MySQL"
+# Passing a function to generate a random password if not provided
+random_pass() {
+    if [ -z "$1" ]; then
+        openssl rand -base64 8
+    else
+        echo "$1"
+    fi
+}
+
+# Function to configure MySQL
+mysql_config() {
+    set_username="$1"
+    set_database="$2"
+    set_password="$3"
+
+    echo "Configuring MySQL"
+    echo "Creating MySQL user and database"
+
+    # Generate a password if not provided
+    password=$(random_pass "$password")
+
+    # Run MySQL commands
+    mysql -u root <<MYSQL_SCRIPT
+    CREATE DATABASE $database;
+    CREATE USER '$username'@'localhost' IDENTIFIED BY '$password';
+    GRANT ALL PRIVILEGES ON $database.* TO '$username'@'localhost';
+    FLUSH PRIVILEGES;
+MYSQL_SCRIPT
+
+    echo "MySQL user created."
+    echo "Username:   $username"
+    echo "Database:   $database"
+    echo "Password:   $password"
+}
+# To run the function, pass the username, database name and password as arguments 
+# e.g. sudo ./lampstack_installation.sh "username" "database_name" "password". In this case,  `sudo bash ./lampstack LARAVEL Lamp` will be used instead
+
+#===================================================================================================
+
+
