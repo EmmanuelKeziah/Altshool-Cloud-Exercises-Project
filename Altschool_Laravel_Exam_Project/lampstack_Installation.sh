@@ -125,10 +125,7 @@ fi
 sudo sed -i 's/cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/' /etc/php/8.2/apache2/php.ini || exit 1
 
 sudo systemctl restart apache2
-
-
 #===================================================================================================
-
 
 #  Automated Installation of curl
 sudo apt install curl -y
@@ -155,6 +152,12 @@ sudo mv composer.phar /usr/local/bin/composer
 #  Check composer version
 composer --version
 cd /var/www/html/laravel && cp .env.example .env
+=======
+
+# GIT CLONE (LARAVEL)
+#===================================================================================================
+cd /var/www/html && git clone https://github.com/laravel/laravel.git && mkdir LARAVEL_PROJECT 
+#===================================================================================================
 
 
 #      CONFIGURING APACHE2 WEB SERVER
@@ -177,6 +180,12 @@ cat <<EOF > /etc/apache2/sites-available/laravel.conf
     CustomLog ${APACHE_LOG_DIR}/access.log combined
 </VirtualHost>
 EOF
+#===================================================================================================
+
+ 
+#     CLONING PHP Laravel GitHub Repository:
+#===================================================================================================
+cd /var/www/html && git clone https://github.com/laravel/laravel.git
 #===================================================================================================
 
 
@@ -287,6 +296,42 @@ echo "LAMP stack installed successfully"
 
 
 
+=======
+#   CONFIGURING MYSQL
+#===================================================================================================
+# Passing a function to generate a random password if not provided
+random_pass() {
+    if [ -z "$1" ]; then
+        openssl rand -base64 8
+    else
+        echo "$1"
+    fi
+}
 
+# Function to configure MySQL
+mysql_config() {
+    set_username="$1"
+    set_database="$2"
+    set_password="$3"
 
+    echo "Configuring MySQL"
+    echo "Creating MySQL user and database"
 
+    # Generate a password if not provided
+    password=$(random_pass "$password")
+
+    # Run MySQL commands
+    mysql -u root <<MYSQL_SCRIPT
+    CREATE DATABASE $database;
+    CREATE USER '$username'@'localhost' IDENTIFIED BY '$password';
+    GRANT ALL PRIVILEGES ON $database.* TO '$username'@'localhost';
+    FLUSH PRIVILEGES;
+MYSQL_SCRIPT
+
+    echo "MySQL user created."
+    echo "Username:   $username"
+    echo "Database:   $database"
+    echo "Password:   $password"
+}
+# To run the function, pass the username, database name and password as arguments 
+# e.g. sudo ./lampstack_installation.sh "username" "database_name" "password". In this case,  `sudo bash ./lampstack LARAVEL Lamp` will be used instead

@@ -68,66 +68,97 @@ This documentation is intended to provide a step-by-step guide on how to deploy 
 1. Download the latest version of Vagrant from the official website: https://www.vagrantup.com/downloads.html if you do not already have it installed on your machine.
 2. Run the installer and follow the instructions to install Vagrant on your machine.
 3. If you are using the terminal to install Vagrant, you can use the following commands:
-    + `sudo apt-get update`
+    + `sudo apt-get update`:
+    This will update the system.
     + `sudo apt-get install vagrant`
     This will install the latest version of Vagrant on your machine. 
 
     ## Initializing Vagrant:
      In order to initialize Vagrant, you will need to create a directory for your project. You can do this by using the following command:
     + `mkdir <directory_name>`: in this case, the directory name will be `Vagrant_Deployment`.
+
     + `cd <directory_name>`: this will change the directory to the newly created directory. You can use the `touch` command to create the necessary files in the directory and the `ls` command to list the files in the directory.
+
     + `vagrant init`: this will initialize Vagrant  and create a `Vagrantfile` in the directory. in this case, `./virtual_machines.sh` will be used to initialize Vagrant and create the `Vagrantfile` in the directory.
+
     + `vagrant up`: this will start the virtual machines and provision them with the bash script. in this case, `./virtual_machines.sh` will be used to start the virtual machines and provision them with the bash script for the master and slave virtual machines.
+        The illustration below shows the commands used to initialize Vagrant and start the virtual machines:
+        ![Initializing Vagrant](./Images/vagrant_init.jpg)
 
-# 3. Configurations
-## Defining virtual machines:
-In order to define the virtual machines, you can either edit the vagrant file or create a bash script to define the virtual machines. In this case, a bash script will be used to define the virtual machines. The bash script will be named `virtual_machines.sh` and will be located in the `Vagrant_Deployment` directory. The bash script will contain the following code:
-```
-#!/bin/bash
-cat <<EOF > Vagrantfile
-Vagrant.configure("2") do |config|
-   config.vm.define "Slave" do |slave|
-     slave.vm.box = "ubuntu/focal64"
-        slave.vm.hostname = "SlaveBox"
+        ![Starting Virtual Machines](./Images/vagrant_up.jpg)
 
-        # Customize the amount of memory on the VM:
-        slave.vm.provider "virtualbox" do |virtualbox|
-        virtualbox.memory = "1024"
-        virtualbox.cpus = "1"
+
+    # 3. Configurations
+    ## Defining virtual machines:
+    In order to define the virtual machines, you can either edit the vagrant file or create a bash script to define the virtual machines. In this case, a bash script will be used to define the virtual machines. The bash script will be named `virtual_machines.sh` and will be located in the `Vagrant_Deployment` directory. The bash script will contain the following code:
+    ```
+    #!/bin/bash
+    cat <<EOF > Vagrantfile
+    Vagrant.configure("2") do |config|
+    config.vm.define "Slave" do |slave|
+        slave.vm.box = "ubuntu/focal64"
+            slave.vm.hostname = "SlaveBox"
+
+            # Customize the amount of memory on the VM:
+            slave.vm.provider "virtualbox" do |virtualbox|
+            virtualbox.memory = "1024"
+            virtualbox.cpus = "1"
+            end
+            # Other configuration(network, port forwarding, e.t.c) goes here...
+            slave.vm.provision "shell", inline: <<-SHELL
+            # Add scripts to update the system and install the required software here...
+            SHELL
         end
-        # Other configuration(network, port forwarding, e.t.c) goes here...
-        slave.vm.provision "shell", inline: <<-SHELL
-        # Add scripts to update the system and install the required software here...
-        SHELL
-    end
-      # Use the SHELL block to add shell commands to your Vagrantfile and close the shell block with a `SHELL`  and `end` statement.
-    
 
-    config.vm.define "Master" do |master|
-        master.vm.box = "ubuntu/focal64"
-        master.vm.hostname = "MasterBox"
+        # Use the SHELL block to add shell commands to your Vagrantfile and close the shell block with a `SHELL`  and `end` statement.
+        
 
-        # Customize the amount of memory on the VM:
-        master.vm.provider "virtualbox" do |virtualbox|
-        virtualbox.memory = "1024"
-        virtualbox.cpus = "1"
+        config.vm.define "Master" do |master|
+            master.vm.box = "ubuntu/focal64"
+            master.vm.hostname = "MasterBox"
+
+            # Customize the amount of memory on the VM:
+            master.vm.provider "virtualbox" do |virtualbox|
+            virtualbox.memory = "1024"
+            virtualbox.cpus = "1"
+            end
+            # Other configuration(network, port forwarding, etc.) goes here...
         end
-        # Other configuration(network, port forwarding, etc.) goes here...
-    end
         master.vm.provision "shell", inline: <<-SHELL
         # Add scripts to update the system and install the required software here...
-        SHELL
-end
-EOF
-```
+       SHELL
+    end
+    EOF
+
+# Explanation of the code:
 - The code above will define two virtual machines: `Master` and `Slave` . The script define the hostname, networking configurations, and the amount of memory allocated to the virtual machines. The script will also provision the virtual machines with a bash script that will install the required software and configure the virtual machines.
+
 - The shebang `#!/bin/bash` is used to specify the interpreter to be used to execute the script(it can be sh, bash or zsh). 
+
 - The `cat` command is used to concatenate the code in the `EOF` block and the `Vagrantfile` in the `Vagrant_Deployment` directory. The `Vagrantfile` will be created in the `Vagrant_Deployment` directory and will contain the code in the `EOF` block. 
+
 - The `EOF` block will contain the code to define the virtual machines.
 
 
 ##  Starting Virtual Machines:
-The command `vagrant up` can be added to the end of the bashscript or vagrantfile and this will automatically start the virtual machines and provision them with the bash script.
+The command `vagrant up` can also be added to the end of the bashscript or vagrantfile and this will automatically start the virtual machines and provision them with the bash script as seen below:
+    ```
+    #!/bin/bash
+    cat <<EOF > Vagrantfile
+    Vagrant.configure("2") do |config|
+    config.vm.define "Slave" do |slave|
+        # hostname and other configurations goes here...
+        slave.vm.provision "shell", inline: <<-SHELL
+            # Add scripts to update the system and install the required software here...
+       SHELL
+        end
+        
+
+        config.vm.define "Master" do |master|
+            # Add similar scripts here...
+       SHELL
+    end
+    EOF
 
 # 4. Provisioning Scripts
 ## Provisioning Virtual Machine:
@@ -141,6 +172,11 @@ The following commands will be used to deploy LAMPstack on both the master virtu
 # Installing MySQL:
 + `sudo apt-get install mysql-server`: this will install MySQL.
 + `sudo apt-get install php libapache2-mod-php php-mysql php-cli php-curl php-gd php-mbstring php-xml php-xmlrpc php-soap php-intl php-zip php-unzip php-tokenizer`: this will install PHP and its dependencies.
+Error handling and debugging:
++ If you encounter any errors while installing the software, you can use the following commands to fix the errors:
++ `sudo apt-get update`: this will update the system.
++ `sudo apt-get upgrade`: this will upgrade the system.
++ `sudo apt-get install -f`: this will fix any broken dependencies.
 
 # Configuring Apache Server:
 - Here are the steps to configure Apache web server:
