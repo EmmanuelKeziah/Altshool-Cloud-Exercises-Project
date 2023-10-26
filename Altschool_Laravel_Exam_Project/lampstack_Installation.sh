@@ -125,7 +125,14 @@ fi
 sudo sed -i 's/cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/' /etc/php/8.2/apache2/php.ini || exit 1
 
 sudo systemctl restart apache2
+
 #===================================================================================================
+
+=======
+
+
+#===================================================================================================
+
 
 #  Automated Installation of curl
 sudo apt install curl -y
@@ -182,7 +189,7 @@ cat <<EOF > /etc/apache2/sites-available/laravel.conf
 EOF
 #===================================================================================================
 
- 
+
 #     CLONING PHP Laravel GitHub Repository:
 #===================================================================================================
 cd /var/www/html && git clone https://github.com/laravel/laravel.git
@@ -294,9 +301,6 @@ echo "LAMP stack installed successfully"
 #===================================================================================================
 
 
-
-
-=======
 #   CONFIGURING MYSQL
 #===================================================================================================
 # Passing a function to generate a random password if not provided
@@ -334,4 +338,5 @@ MYSQL_SCRIPT
     echo "Password:   $password"
 }
 # To run the function, pass the username, database name and password as arguments 
-# e.g. sudo ./lampstack_installation.sh "username" "database_name" "password". In this case,  `sudo bash ./lampstack LARAVEL Lamp` will be used instead
+# e.g. sudo ./lampstack_installation.sh "username" "database_name" "password". In this case,  `sudo bash ./lampstack LARAVEL Lamp` will be used instead.
+#===================================================================================================
