@@ -10,15 +10,16 @@
 #=============================================================================================
 echo "Checking system updates"
  if sudo apt-get update -y; then
- echo "Package updates installed successfully"
+    echo "Package updates installed successfully"
 else
- echo "ERROR: Failed to install system updates"
- exit 1
+    echo "ERROR: Failed to install system updates"
+    exit 1
 fi
 
 echo "Installing LAMP stack"
 if sudo apt-get install -y apache2; then
-    echo "Apache installed successfully"  sudo systemctl start apache2
+    echo "Apache installed successfully"  
+    sudo systemctl start apache2
 else
     echo "ERROR: Failed to install Apache"
     exit 1
@@ -204,7 +205,7 @@ fi
 
 # INSTALLING COMPOSER
 #===================================================================================================
-Downloading composer as altcomposer user
+# Downloading composer as altcomposer user
 sudo apt-get update -y || exit 1
 sudo apt install curl -y
 if sudo apt install composer -y; then
@@ -239,14 +240,14 @@ else
 fi
 
 # Change the ownership of the /var/www/html/laravel directory to altcomposer
-if cd /var/www/html/laravel && sudo chown -R altcomposer:www-data /var/www/html/laravel; then
+if sudo chown -R altcomposer:www-data /var/www/html/laravel; then
     echo "Changed ownership of /var/www/html/laravel directory to altcomposer"
 else
     echo "ERROR: Failed to change ownership of /var/www/html/laravel directory"
     exit 1
 fi
-
 #===================================================================================================
+
 # Generating Laravel application key
 if sudo -u altcomposer bash -c 'cd /var/www/html/laravel && composer install && php artisan key:generate'; then
     echo "Laravel application key generated successfully"
@@ -263,32 +264,17 @@ else
     exit 1
 fi
 
-# Change the permissions of the /var/www directory to 755
-sudo chmod -R 755 /var/www || exit 1
-
 # Change the ownership of /usr/local/bin to altcomposer
-if sudo chown -R altcomposer:altcomposer /usr/local/bin; then
-    echo "Permissions for /usr/local/bin set successfully"
+if sudo chown -R altcomposer:www-data /var/www/html/laravel/storage /var/www/html/laravel/bootstrap/cache && \
+sudo chmod -R ug+rwx,o+rx /var/www/html/laravel/storage /var/www/html/laravel/bootstrap/cache; then
+    echo "Changed ownership of Laravel directories to altcomposer and set permissions"
 else
-    echo "ERROR: Failed to set permissions for /usr/local/bin"
+    echo "ERROR: Failed to change ownership of Laravel directories to altcomposer and set permissions"
     exit 1
 fi
 
-# Setting permissions for Laravel directories
-if sudo chmod -R 775 /var/www/html/laravel/storage /var/www/html/laravel/bootstrap/cache; then
-    echo "Permissions for Laravel directories set successfully"
-else
-    echo "ERROR: Failed to set permissions for Laravel directories"
-    exit 1
-fi
-
-# Copying the .env.example file to .env
-if sudo cp /var/www/html/laravel/.env.example /var/www/html/laravel/.env; then
-    echo ".env.example file copied successfully"
-else
-    echo "ERROR: Failed to copy .env.example file"
-    exit 1
-fi
+sudo chmod -R 775 /var/www/html/laravel || exit 1
+sudo chmod -R 777 /var/www/html/laravel/storage || exit 1
 
 echo "Laravel Project cloned, Composer installed and Laravel Dependencies installed successfully"
 #===================================================================================================
@@ -302,17 +288,39 @@ else
     echo "ERROR: Failed to install MySQL"
     exit 1
 fi
+
+# Setting permissions for MySQL directories
+if sudo chown -R mysql:mysql /var/lib/mysql; then
+    echo "Changed ownership of /var/lib/mysql directory to mysql"
+else
+    echo "ERROR: Failed to change ownership of /var/lib/mysql directory"
+    exit 1
+fi
+
+if sudo chmod -R 775 /var/lib/mysql; then
+    echo "Changed permissions of /var/lib/mysql directory to 775"
+else
+    echo "ERROR: Failed to change permissions of /var/lib/mysql directory"
+    exit 1
+fi
+
+if sudo chmod -R 777 /var/lib/mysql/mysql; then
+    echo "Changed permissions of /var/lib/mysql/mysql directory to 777"
+else
+    echo "ERROR: Failed to change permissions of /var/lib/mysql/mysql directory"
+    exit 1
+fi
+
+# Copying the .env.example file to .env
+if sudo cp /var/www/html/laravel/.env.example /var/www/html/laravel/.env; then
+    echo ".env.example file copied successfully"
+else
+    echo "ERROR: Failed to copy .env.example file"
+    exit 1
+fi
+
 #   CONFIGURING MYSQL
 # ===================================================================================================
-# Passing a function to generate a random password if not provided
-random_pass() {
-    if [ -z "$1" ]; then
-        openssl rand -base64 8
-    else
-        echo "$1"
-    fi
-}
-
 # Function to configure MySQL
 mysql_config() {
     set_username="$1"
@@ -322,39 +330,49 @@ mysql_config() {
     echo "Configuring MySQL"
     echo "Creating MySQL user and database"
 
-    # Generate a password if not provided
-    password=$(random_pass "$password")
+   # Generate a password if not provided
+    if [ -z "$set_password" ]; then
+        password=$(openssl rand -base64 8)
+    else
+        password="$set_password"
+    fi
 
     # Run MySQL commands
     mysql -u root <<MYSQL_SCRIPT
-    CREATE DATABASE $database;
-    CREATE USER '$username'@'localhost' IDENTIFIED BY '$password';
-    GRANT ALL PRIVILEGES ON $database.* TO '$username'@'localhost';
+    CREATE DATABASE $set_database;
+    CREATE USER '$set_username'@'localhost' IDENTIFIED BY '$password';
+    GRANT ALL PRIVILEGES ON $set_database.* TO '$set_username'@'localhost';
     FLUSH PRIVILEGES;
 MYSQL_SCRIPT
 
+if [[ $? -eq 0 ]]; then
     echo "MySQL user created."
-    echo "Username:   $username"
-    echo "Database:   $database"
+    echo "Username:   $set_username"
+    echo "Database:   $set_database"
     echo "Password:   $password"
+else
+    echo "ERROR: Failed to create MySQL user and database."
+    exit 1
+fi
 }
-# To run the function, pass the username, database name and password as arguments 
-# e.g. sudo ./lampstack_installation.sh "username" "database_name" "password". In this case,  `sudo bash ./lampstack_installation LARAVEL Lamp` will be used instead
 
 # Set the username, database name and password for MySQL
-sudo sed -i 's/DB_DATABASE=laravel/DB_DATABASE=laravel/' /var/www/html/laravel/.env
+username="root"
+database="laravel"
+password="LARAVEL_PASSWORD"
 
-sudo sed -i 's/DB_USERNAME=root/DB_USERNAME=laravel/' /var/www/html/laravel/.env
-
-sudo sed -i 's/DB_PASSWORD=/DB_PASSWORD=laravel/' /var/www/html/laravel/.env
+# Call the function to configure MySQL
+mysql_config "$username" "$database" "$password"
+#===================================================================================================
 # Caching the configuration
-php artisan config:cache || exit 1
+cd /var/www/html/laravel && php artisan config:cache || exit 1
 
 # Migrating the database
 cd /var/www/html/laravel && php artisan migrate || exit 1
 #===================================================================================================
 
-#    RESTARTING APACHE WEB SERVER #===================================================================================================
+#    RESTARTING APACHE WEB SERVER 
+#===================================================================================================
 echo "Restarting Apache Web Server"
 sudo systemctl restart apache2 || exit 1
 echo "LAMP stack installed successfully"
