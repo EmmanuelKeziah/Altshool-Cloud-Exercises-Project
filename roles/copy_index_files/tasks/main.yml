@@ -1,0 +1,23 @@
+# Description: The main.yml file is used to install nginx package and its dependencies if necessary and to copy the index files to the nginx server directory .
+- name: Ensure Nginx is installed
+  package:
+    name: nginx
+    state: present
+    
+- name:  copy the nginx index files
+  copy:
+    src: default
+    dest: /etc/nginx/sites-available
+    owner: root
+    group: root
+    mode: 0644
+ 
+- name:  copy the php file to print hostname to server
+  copy:
+    src: index.php
+    dest: /var/www/html
+    owner: root
+    group: root
+    mode: 0644
+    
+    sudo nano /etc/nginx/sites-available/default

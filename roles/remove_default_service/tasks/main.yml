@@ -1,0 +1,17 @@
+- name:  remove nginx default file
+  file:
+    path: /etc/nginx/sites-available/default
+    state: absent
+    owner: root
+    group: root
+    mode: 0644
+    tags: nginx
+
+- name:  remove nginx index file
+  file:
+    path: /var/www/html/index.nginx-debian.html
+    state: absent
+    owner: root
+    group: root
+    mode: 0644
+    tags: nginx
