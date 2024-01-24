@@ -1,0 +1,50 @@
+---
+
+- hosts:  all
+  become: true
+  tasks:
+  
+  - name:  Update the apt cache
+    tags:  timezone
+    apt:
+      update_cache: yes 
+
+  - name:  Upgrade all packages
+    tags:  timezone
+    apt:
+      upgrade: yes
+  
+  - name: Install Ansible
+    apt:
+      name: ansible
+      state: latest
+      
+  - name:  set the timezone to 
+    tags:  timezone
+    timezone:  name=Africa/Lagos
+
+  - name:  install the apache web server
+    tags: apache
+    apt:
+      name: apache2
+      state: latest
+
+  - name:  remove the default apache web server
+    tags: apache
+    file:
+      path: /var/www/html/index.html
+      state: absent
+
+  - name:  Write the ip address to a file using printf
+    tags: apache
+    become: yes
+    shell:  
+      printf "The ip address of this server is %s\n" {{ ansible_default_ipv4.address }} > /var/www/html/index.html
+    notify:  restart apache
+
+  handlers:
+    - name:  restart apache
+      service:
+        name: apache2
+        state: restarted
+

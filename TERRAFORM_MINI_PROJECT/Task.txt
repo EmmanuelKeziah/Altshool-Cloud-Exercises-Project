@@ -1,0 +1,17 @@
+# TITLE: Terraform Mini Project 
+
+# DESCRIPTION: This project is a mini project for the terraform course. It is a simple project that creates 3 EC2 instances and puts them behind an Elastic Load Balancer. It also exports the public IP addresses of the 3 instances to a file called host-inventory. It also gets a .com.ng domain name and sets it up with AWS Route53 within the terraform plan, then adds an A record for subdomain terraform-test that points to the ELB IP address. It also creates an Ansible script that uses the host-inventory file Terraform created to install Apache, set timezone to Africa/Lagos and displays a simple HTML page that displays content to clearly identify on all 3 EC2 instances. It is complete when one visits terraform-test.yoursdmain.com and it shows the content from your instances, while rotating between the servers as your refresh to display their unique content.
+
+# AUTHOR: Emmanuel Keziah
+
+# Date Created: 2023-12-22
+
+# TASK:
+# 1. Create 3 EC2 instances and put them behind an Elastic Load Balancer
+# 2. Export the public IP addresses of the 3 instances to a file called host-inventory
+# 3. Get a .com.ng domain name and set it up with AWS Route53 within the terraform plan
+# 4. Add an A record for subdomain terraform-test that points to the ELB IP address
+# 5. Create an Ansible script that uses the host-inventory file Terraform created to install Apache, set timezone to Africa/Lagos and displays a simple HTML page that displays content to clearly identify on all 3 EC2 instances
+# 6. Your project is complete when one visits terraform-test.yoursdmain.com and it shows the content from your instances, while rotating between the servers as your refresh to display their unique content.
+
+

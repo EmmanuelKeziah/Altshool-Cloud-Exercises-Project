@@ -1,0 +1,78 @@
+# Description: Terraform code for creating AWS instances and generating a host >
+
+resource "aws_instance" "instance_1" {
+  ami       = var.ami
+  instance_type = var.instance_type
+  key_name = var.key_pair
+  security_groups = [aws_security_group.alb_security_group_1.id]
+  subnet_id = aws_subnet.public_subnet_1.id
+  availability_zone = "var.AZ1"
+
+  connection {
+    type = "ssh"
+    host = "self.public_ip"
+    user = "ubuntu"
+    private_key = file(var.key_pair)
+  }
+
+  tags = {
+    Name = "instance_1"
+    source = "terraform" }
+}
+
+
+resource "aws_instance" "instance_2" {
+  ami       = var.ami
+  instance_type = var.instance_type
+  key_name = var.key_pair
+  security_groups = [aws_security_group.alb_security_group_2.id]
+  subnet_id = var.public_subnet_cidr_block_2
+  availability_zone = var.AZ1"
+
+  connection {
+    type = "ssh"
+    host = "self.public_ip"
+    user = "ubuntu"
+    private_key = file(var.key_pair)
+  }
+
+  tags = {
+ Name = "instance_2"
+    source = "terraform"
+  }
+}
+
+
+resource "aws_instance" "instance_3" {
+  ami       = var.ami
+  instance_type = var.instance_type
+  key_name = var.key_pair
+  security_groups = [aws_security_group.alb_security_group_1.id]
+  subnet_id = var.public_subnet_cidr_block_1
+  availability_zone = "var.AZ1"
+
+  connection {
+    type = "ssh"
+    host = "self.public_ip"
+    user = "ubuntu"
+    private_key = file(var.key_pair)
+  }
+
+  tags = {
+    Name = "instance_3"
+    source = "terraform"
+  }
+}
+
+resource "local_file" "public_ip" {
+  filename = "/root/TERRAFORM_MINI_PROJECT/ansible/host-inventory"
+  content = <<EOF
+  Welcome to this channel. ${aws_instance.instance_1.public_ip} says Happy lear>
+  [instance_1] host = ${aws_instance.instance_1.public_ip}
+  Welcome to this channel. ${aws_instance.instance_2.public_ip} says Happy lear>
+  [instance_2] host = ${aws_instance.instance_2.public_ip}
+  Welcome to this channel. ${aws_instance.instance_3.public_ip} says Happy lear>
+  [instance_3] host = ${aws_instance.instance_3.public_ip
+}
+EOF
+}
