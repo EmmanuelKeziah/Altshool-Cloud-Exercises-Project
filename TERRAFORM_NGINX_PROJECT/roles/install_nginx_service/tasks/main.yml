@@ -1,0 +1,9 @@
+- name:  install nginx
+  apt: name=nginx state=latest
+  become: true
+  tags: nginx
+
+- name:  install php-fpm package 
+  apt: name=php-fpm state=latest
+  become: true
+  tags: php-fpm

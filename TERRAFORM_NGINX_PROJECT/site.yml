@@ -1,0 +1,28 @@
+---
+- hosts:  all
+  become: true
+  pre_tasks:
+    - name: update & upgrade the server
+    apt:
+      update_cache: true
+      upgrade_cache: true
+
+- hosts: all
+  become: true
+  roles:
+    - install_nginx_service
+
+- hosts: all
+  become: true
+  roles:
+    - remove_default_service
+
+- hosts: all
+  become: true
+  roles:
+    - copy_index_files
+
+- hosts: all
+  become: true
+  roles:
+    - start_nginx_service

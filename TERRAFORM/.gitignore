@@ -1,0 +1,14 @@
+# Terraform
+.terraform
+terraform.tfstate*
+
+# Ignore all tfvars files
+*.tfvars
+
+# Ignore any .tfstate files if created
+*.tfstate
+
+# SSH credentials 
+*.pem
+*.key
+id_rsa*
